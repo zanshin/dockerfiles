@@ -8,23 +8,21 @@
 #	--name mutt \
 #	jess/mutt
 #
-FROM debian:sid
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM alpine:edge
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-RUN groupadd -g 1000 user \
-	&& useradd --create-home -d /home/user -g user -u 1000 user
+RUN addgroup -g 1000 user \
+	&& adduser -D -h /home/user -G user -u 1000 user
 
-RUN apt-get update && apt-get install -y \
+RUN apk --no-cache add \
 	ca-certificates \
 	elinks \
 	git \
-	libsasl2-modules \
+	gnupg1 \
 	lynx \
-	mutt-dbg \
-	mutt-patched \
-	vim-nox \
-	--no-install-recommends \
-	&& rm -rf /var/lib/apt/lists/*
+	mutt \
+	mutt-doc \
+	vim
 
 # a browser is necessary!
 ENV BROWSER lynx
@@ -36,8 +34,8 @@ RUN mkdir -p $HOME/.mutt/cache/headers $HOME/.mutt/cache/bodies \
 	&& touch $HOME/.mutt/certificates
 
 # vim settings
-RUN git clone https://github.com/jfrazelle/.vim.git $HOME/.vim \
-	&& git clone https://github.com/altercation/vim-colors-solarized $HOME/.vim/bundle/vim-colors-solarized \
+RUN git clone --depth 1 https://github.com/jessfraz/.vim.git $HOME/.vim \
+	&& git clone --depth 1 https://github.com/altercation/vim-colors-solarized $HOME/.vim/bundle/vim-colors-solarized \
 	&& cp $HOME/.vim/vimrc $HOME/.vimrc
 
 ENV LANG C.UTF-8
@@ -47,4 +45,4 @@ COPY	.mutt			$HOME/.mutt
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["mutt-patched", "-F", "~/.mutt/muttrc"]
+CMD ["mutt", "-F", "~/.mutt/muttrc"]
